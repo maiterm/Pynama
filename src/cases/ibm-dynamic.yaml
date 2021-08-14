@@ -1,0 +1,40 @@
+---
+name: dynamic-B
+save-dir: dynamic-B
+save-n-steps: 100
+
+domain:
+  ngl: 3
+  # box-mesh:
+  #   nelem: [100, 100]
+  #   lower: [-4,-4]
+  #   upper: [4,4]
+  gmsh-file: dynamic-h04.msh
+  h-min: 0.04
+
+bodies:
+  -
+    vel: 'dynamic'
+    type: "circle"
+    radius: 0.5
+    center: [0,0]
+  # -
+  #   vel: 'static'
+  #   type: "circle"
+  #   radius: 0.5
+  #   center: [0,0.9]
+
+boundary-conditions:
+  constant:
+    re: 140
+    direction: 0
+    longRef: '1'
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+time-solver:
+  max-steps: 100000
+  start-time: 0
+  end-time: 300

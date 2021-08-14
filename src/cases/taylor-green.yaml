@@ -1,0 +1,34 @@
+---
+name: Taylor Green
+save-dir: tg-test
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+domain:
+  ngl: 3
+  box-mesh:
+    nelem: [20,20]
+    lower: [0,0]
+    upper: [1,1]
+
+time-solver:
+  max-steps: 50
+  start-time: 0
+  end-time: 5
+
+boundary-conditions:
+  custom-func:
+    name: taylor_green
+    attributes: ['velocity', 'vorticity', 'alpha']
+
+initial-conditions:
+  custom-func:
+    name: taylor_green
+    attributes: ['velocity', 'vorticity', 'alpha']
+
+tests:
+  custom-func:
+    name: taylor_green
+    attributes: ['velocity', 'vorticity', 'alpha']

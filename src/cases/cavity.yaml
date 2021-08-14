@@ -1,0 +1,45 @@
+---
+name: Cavity
+save-dir: cavity-re100-3d-up1Down-recX-sinBord
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+domain:
+  ngl: 3
+  box-mesh:
+    nelem: [30,10,10]
+    lower: [0,0,0]
+    upper: [3,1,1]
+  # box-mesh:
+  #   nelem: [50,50]
+  #   lower: [0,0]
+  #   upper: [1,1]
+  
+time-solver:
+  max-steps: 2000
+  start-time: 0
+  end-time: 20
+
+# boundary-conditions:
+#   no-slip:
+#     up: [2 ,0 ]
+#     down: [0, 0]
+#     left: [0, 0]
+#     right: [0, 0]
+# initial-conditions:
+#   vorticity: [0]
+  
+boundary-conditions:
+  no-slip:
+    left: [0, 0,0]
+    right: [0, 0,0]
+    down: [2, 0,0]
+    up: [2 ,0,0 ]
+    back: [0, 0,0]
+    front: [0, 0,0]
+
+
+initial-conditions:
+  vorticity: [0,0,0]

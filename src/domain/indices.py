@@ -10,8 +10,14 @@ class IndicesManager:
         self.dim = dim
         self.reorderEntities = self.reorderEntities2D if dim ==2 else self.reorderEntities3D
         self._ngl = ngl
+        self.__dirNodes = set()
+        self.__nsNodes = set()
+         
         if not comm.rank:
             self.logger.debug("IndicesManager Seteado")
+
+    def getNGL(self):
+        return self._ngl
 
     def getNumCompAndNumDof(self, componentsPerField ,numFields):
         numComp = [componentsPerField] * numFields
@@ -39,35 +45,27 @@ class IndicesManager:
     def getGlobalIndicesSection(self):
         return self._globalIndicesSection
 
-    def setDirichletIndices(self, bcInput):
-        self.BC2nodedict = bcInput
+    def getTotalNodes(self):
+        total = self._globalIndicesSection.getStorageSize()
+        return total
 
-    def getDirichletIndices(self):
+    def setDirichletNodes(self, nodes: set):
+        self.__dirNodes |= nodes
+
+    def getDirichletNodes(self):
         self.globalIndicesDIR = set()
-        localIndicesDIR = set()
-        for nodes in self.BC2nodedict.values():
-            localIndicesDIR |= nodes
-
-        for remoteIndices in self.comm.tompi4py().allgather(localIndicesDIR):
+        for remoteIndices in self.comm.allgather(self.__dirNodes):
             self.globalIndicesDIR |= remoteIndices
+        return self.__dirNodes
 
-        return localIndicesDIR
+    def setNoSlipNodes(self, nodes: set):
+        self.__nsNodes |= nodes
 
-    def getNoSlipIndices(self, bcInput):
-        indicesNS = set()
-        if 'no-slip-border' in bcInput:
-            noSlipBorders = bcInput['no-slip-border']
-            for border in noSlipBorders:
-                indices = []
-                # self.logger.debug("border con ns: %s", 2**border)
-                # self.logger.debug("indices encontrados (nodos?): %s", indices)
-
-            # if self.BCdict[bc]['ns'] is not None:
-            #     indicesNS |= self.BC2nodedict[bc]
-
-        # global indices for DIR and NS BC are allgathered amondg processes
-        globIndices = self.comm.tompi4py().allgather([indicesNS])
-        return globIndices
+    def getNoSlipNodes(self):
+        self.globalIndicesNS = set()
+        for remoteIndices in self.comm.allgather(self.__nsNodes):
+            self.globalIndicesNS |= remoteIndices
+        return self.__nsNodes
 
     def mapEntitiesToNodes(self, entities, orientations, getShared = True):
         entitites = self.reorderEntities(entities)
@@ -101,9 +99,13 @@ class IndicesManager:
         localNodes, _ = self.getSectionOffset(self._indSection, entity)
         return localNodes
 
-    def getGlobalNodes(self, entity):
+    def getGlobalNodes(self, entity, shared=True):
         globalNodes, ownNodes = self.getSectionOffset(self._globalIndicesSection, entity)
-        # self.logger.debug("entity  %s", entity)
+        if not shared:
+            if ownNodes:
+                return globalNodes, ownNodes
+            else:
+                return [],[]
         return globalNodes, ownNodes
 
     def getSectionOffset(self, section, poi):

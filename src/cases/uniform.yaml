@@ -1,24 +1,27 @@
 ---
-name: uniform-flow-yaml
+name: Uniform Flow
+save-dir: uniform-flow
+
+material-properties:
+  rho: 1
+  mu: 0.01
 
 domain:
-  dim: 2 # no es necesario dim = 2, es implicito con nelem + lower + upper
-  nelem: [2,2]
-  ngl: 2
-  lower: [0,0]
-  upper: [1,1]
+  ngl: 3
+  box-mesh:
+    nelem: [10,10]
+    lower: [0,0]
+    upper: [1,1]
+
+time-solver:
+  max-steps: 10
+  start-time: 0
+  end-time: 100
 
 boundary-conditions:
-  border-name:
-    0 :
-      vel: [ 2 , 'flatPlateVy' ]
-    1 :
-      vel: [ 1, 2]
-    2 :
-      vel: [ 1, 0]
-      vort: ['taylorGreenVort']
-    3 :
-      vel: [ 1, 0]
-  # no-slip-border:
-  #   - 0
-  #   - 3
+  uniform:
+    velocity: [4, 0]
+    vorticity: [0]
+
+initial-conditions:
+  velocity: [4,0]

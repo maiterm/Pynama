@@ -1,0 +1,64 @@
+---
+name: ibm-static
+save-dir: ibm-test
+save-n-steps: 2
+
+# cylinder
+domain:
+  ngl: 3
+  box-mesh:
+    nelem: [50, 50]
+    lower: [-3,-3]
+    upper: [3,3]
+  # gmsh-file: sbs-d3-h04.msh
+  # h-min: 0.04
+
+initial-conditions:
+  keep-coords: True
+  vorticity: [0]
+
+boundary-conditions:
+  uniform:
+    re: 10
+    direction: 0
+    Lref: '1'
+    rho: 0.5
+    mu: 0.01
+bodies:
+  -
+    type: "circle"
+    vel: 'static'
+    radius: 0.5
+    center: [0,0]
+  # -
+  #   type: "circle"
+  #   vel: 'static'
+  #   radius: 0.5
+  #   center: [0,-1.5]
+
+# cavity
+# domain:
+#   ngl: 3
+#   box-mesh:
+#     nelem: [400, 400]
+#     lower: [-4,-4]
+#     upper: [4,4]
+# boundary-conditions:
+#   constant:
+#     re: 100
+#     direction: -45
+#     longRef: "sqrt(2)"
+# bodies:
+#   -
+#     vel: 'static'
+#     type: "box"
+#     center: [0,0]
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+time-solver:
+  max-steps: 100
+  start-time: 0
+  end-time: 120

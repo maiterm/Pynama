@@ -2,10 +2,11 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 class XmlGenerator(object):
-    def __init__(self, dim):
+    def __init__(self, dim, h5name):
         self.root = Element('Xdmf')
         self.root.set('Version', '2.0')
         self.dim = dim
+        self.h5name = h5name
 
     def setUpDomainNodes(self, totalNodes=None, nodesPerDim=None):
         """
@@ -49,7 +50,7 @@ class XmlGenerator(object):
         timestamp = SubElement(meshElem, "Time")
         timestamp.set("Value", str(t))
 
-    def setAttribute(self, name, step, meshGrid):
+    def setVectorAttribute(self, name, step, meshGrid):
         attr = SubElement(meshGrid, "Attribute")
         attr.set("Name", name)
         attr.set("AttributeType", "Vector")
@@ -63,6 +64,17 @@ class XmlGenerator(object):
         for i in range(self.dim):
             self.setDataToAttribute(attrData, step, name, i)
 
+    def setScalarAttribute(self, name, step, meshGrid):
+        attr = SubElement(meshGrid, "Attribute")
+        attr.set("Name", name)
+        attr.set("AttributeType", "Scalar")
+        attr.set("Center", "Node")
+
+        attrData = SubElement(attr, "DataItem")
+        attrData.set("Dimensions", "{}".format(self.dimensions))
+        attrData.set("NumberType", "Float")
+        attrData.set("Format", "HDF")
+        attrData.text = f"{self.h5name}-{step:05d}.h5:/fields/{name}"
 
     def setDataToAttribute(self, attrData, step, name, dof):
         dofs = ['X', 'Y', 'Z']
@@ -82,8 +94,7 @@ class XmlGenerator(object):
         velData.set("Dimensions", str(self.dimensions * self.dim))
         velData.set("NumberType", "Float")
         velData.set("Format", "HDF")
-        stepFormat = self.formatStep(step)
-        velData.text = "{}-{}.h5:/fields/{}".format(name, stepFormat, name) 
+        velData.text = f"{self.h5name}-{step:05d}.h5:/fields/{name}"
 
     def writeFile(self, nameFile):
         """Return a pretty-printed XML string for the Element.
@@ -104,7 +115,7 @@ class XmlGenerator(object):
 
     @staticmethod
     def formatStep(step):
-        maxZeros = 4
+        maxZeros = 5
         step = str(step)
         zerosToAdd = maxZeros - len(step)
         zerosInFront = '0' * zerosToAdd
