@@ -22,8 +22,7 @@ Fem problem solver with PETSc tools
             ``` 
             petsc_dir = /home/name/petsc
             petsc_arch = /arch-python-linux-x86_64
-                ``` 
-
+            ``` 
     - `python3 setup.py build -v`
     - `python3 setup.py install --user`
 
