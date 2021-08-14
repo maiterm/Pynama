@@ -1,0 +1,29 @@
+---
+name: Cavity2d
+save-dir: cavity-2d-re100
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+domain:
+  ngl: 3
+  box-mesh:
+    nelem: [50,50]
+    lower: [0,0]
+    upper: [1,1]
+  
+time-solver:
+  max-steps: 2000
+  start-time: 0
+  end-time: 2
+
+boundary-conditions:
+  no-slip:
+    up: [2 ,0 ]
+    down: [0, 0]
+    left: [0, 0]
+    right: [0, 0]
+initial-conditions:
+  vorticity: [0]
+  

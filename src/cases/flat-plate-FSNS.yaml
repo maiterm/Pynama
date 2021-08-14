@@ -1,0 +1,36 @@
+---
+name: FaltPlate
+save-dir:  Flate-Plate-FSNS-DownNS
+
+material-properties:
+  rho: 0.5
+  mu: 0.01
+
+domain:
+  ngl: 3
+  box-mesh:
+    nelem: [2,2,2]
+    lower: [0,0,0]
+    upper: [1,1,1]
+  
+time-solver:
+  max-steps: 2000
+  start-time: 0
+  end-time: 0.2
+
+boundary-conditions:
+  no-slip:
+    #up: [2 ,0 ]
+    down: [0, 0, 0]
+    #left: [0, 0]
+    #right: [0, 0]
+  free-slip:
+    left: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    right: [ 'flatPlateX' , 'flatPlateY', 'flatPlateY'  ]
+    ##down: [ 'flatPlateX' , 'flatPlateY' ]
+    up: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    front: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    back: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+
+initial-conditions:
+  vorticity: [0,0,0]
