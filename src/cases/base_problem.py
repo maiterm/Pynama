@@ -8,6 +8,7 @@ from viewer.paraviewer import Paraviewer
 from solver.ts_solver import TsSolver
 from matrices.mat_fs import MatFS, Operators
 from matrices.mat_ns import MatNS
+from matrices.mat_fsns import MatFSNS
 from solver.kle_solver import KleSolver
 from common.timer import Timer
 import logging
@@ -159,6 +160,8 @@ class BaseProblem(object):
             mat = MatFS()
         elif bcType =="NS":
             mat = MatNS()
+        elif bcType =="FS-NS": #only for defineded vel 
+            mat = MatFSNS()
         else:
             raise Exception("FSNS Mat not implemented")
 
