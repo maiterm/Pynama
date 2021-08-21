@@ -24,13 +24,16 @@ boundary-conditions:
     down: [0, 0, 0]
     #left: [0, 0]
     #right: [0, 0]
-  free-slip:
-    left: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
-    right: [ 'flatPlateX' , 'flatPlateY', 'flatPlateY'  ]
-    ##down: [ 'flatPlateX' , 'flatPlateY' ]
-    up: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
-    front: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
-    back: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+  custom-func:
+    name: flat_plate
+    attributes: ['velocity', 'vorticity']
+    borders-name: [ "left", "right", "up", "back", "front" ]
+    # left: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    # right: [ 'flatPlateX' , 'flatPlateY', 'flatPlateY'  ]
+    # ##down: [ 'flatPlateX' , 'flatPlateY' ]
+    # up: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    # front: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
+    # back: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
 
 initial-conditions:
   vorticity: [0,0,0]

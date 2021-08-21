@@ -49,15 +49,15 @@ class BoundaryConditions:
             self.__type = "FS"
             vals = self.__handleUniform(data['uniform'])
             self.__setUpBoundaries('free-slip', self.__borderNames, vals)
+        elif "custom-func" in data and "no-slip" in data:
+            self.__type = "FS-NS"
+            self.__setFunctionBoundaries( data['custom-func']['name'], data['custom-func']['attributes'], data['custom-func']['borders-name'])
+            self.__setPerBoundaries('no-slip', data['no-slip'])
         elif "custom-func" in data:
             self.__type = "FS"
             funcName = data['custom-func']['name']
             attrs = data['custom-func']['attributes']
             self.__setFunctionBoundaries(funcName, attrs)
-        elif "free-slip" in data and "no-slip" in data:
-            self.__type = "FS-NS"
-            self.__setPerBoundaries('free-slip', data['free-slip'])
-            self.__setPerBoundaries('no-slip', data['no-slip'])
         elif "free-slip" in data:
             self.__type = "FS"
             self.__setPerBoundaries('free-slip', data['free-slip'])
@@ -77,12 +77,8 @@ class BoundaryConditions:
 
     def __setPerBoundaries(self, t, sidesDict: dict):
         for name, vals in sidesDict.items():
-            if "custom-func" in vals:
-                funcName = vals['custom-func']['name']
-                attrs = vals['custom-func']['attributes']
-                self.__setFunctionBoundary(name, funcName, attrs)
-            else:
-                self.__setBoundary(name, t , vals)
+            self.__setBoundary(name, t , vals)
+
 
     def __handleUniform(self, dataUniform: dict):
         out = dict()
@@ -134,8 +130,10 @@ class BoundaryConditions:
         self.__ByType[typ].append(boundary)
         self.__ByName[name] = boundary
 
-    def __setFunctionBoundaries(self, funcName, attrs):
-        for borderName in self.__borderNames:
+    def __setFunctionBoundaries(self, funcName, attrs,borderNames = None):
+        if not borderNames:
+            borderNames = self.__borderNames
+        for borderName in borderNames:
             self.__setFunctionBoundary(borderName, funcName, attrs)
 
     def __setFunctionBoundary(self, borderName, funcName, attrs):
