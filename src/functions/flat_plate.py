@@ -1,22 +1,36 @@
-from math import exp, sin, cos, pi
+from math import pi, sin, cos, exp, erf, sqrt
 import numpy as np
 
 
     # @staticmethod
     # def flatplateVel(coord, nu , t=None):
-def velocity(coords, nu,t=None):
+
+def alpha(nu, t):
+    """tau"""
+    return  sqrt(4*nu*t)
+
+def velocity(coord, tau):
+    vel = np.zeros(coord.shape)
     U_ref = 1
-    vx = U_ref * erf(coord[1]/ sqrt(4*nu*t))
-    vz = U_ref * erf(coord[1]/ sqrt(4*nu*t))
-    vy = 0
-    return [vx, vy,vz]
+    vel[:,0] = U_ref * erf(coord[:,1]/ tau)
+    vel[:,1] = 0
+    vel[:,2] = U_ref * erf(coord[:,1]/ tau)
+    return vel.flatten()
 
     # @staticmethod
     # def flatplateVort(coord, nu, t=None):
-def vorticity(coord, nu, t=None):
-    tau = sqrt(4*nu*t)
-    vort = (-2/(tau * sqrt(pi))) * exp(-(coord[1]/tau)**2)
-    return [vort,0,-vort]
+def vorticity(coord, tau):
+    vort = np.zeros(coord.shape)
+    if tau ==0 : 
+        vort[:,0] = 0
+        vort[:,1] = 0
+        vort[:,2] = 0
+        return vort.flatten()
+    vort[:,0] = (-2/(tau * sqrt(pi))) * exp(-(coord[:,1]/tau)**2)
+    vort[:,1] = 0
+    vort[:,2] = (2/(tau * sqrt(pi))) * exp(-(coord[:,1]/tau)**2)
+    return vort.flatten()
+
 
 #@staticmethod
 def flatplateConvective(coord, nu, t=None):

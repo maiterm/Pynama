@@ -26,7 +26,7 @@ boundary-conditions:
     #right: [0, 0]
   custom-func:
     name: flat_plate
-    attributes: ['velocity', 'vorticity']
+    attributes: ['velocity', 'vorticity', 'alpha']
     borders-name: [ "left", "right", "up", "back", "front" ]
     # left: [ 'flatPlateX' , 'flatPlateY' , 'flatPlateY' ]
     # right: [ 'flatPlateX' , 'flatPlateY', 'flatPlateY'  ]
