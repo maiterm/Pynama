@@ -65,6 +65,8 @@ class MatFSNS(MatFS):
         globalNormalIndicesNS = self.dom.getNormalDofs(collect=True)
         dim = self.dom.getDimension()
         
+
+        
         for cell in range(cellStart, cellEnd):
             nodes , inds , localMats = self.dom.computeLocalKLEMats(cell)
             locK, locRw, locRd = localMats
@@ -75,10 +77,6 @@ class MatFSNS(MatFS):
             tangentialDofs = globalTangIndicesNS & indicesVelSet
             normalDofs -= tangentialDofs 
 
-            gldofSetFSNS = list(normalDofs)
-            gldofFreeFSSetNS = list(tangentialDofs)
-
-
             nodeBCintersect = set(globNodesDirichlet) & set(nodes)
             glDirDofs =  [n*dim + dof for n in nodeBCintersect for dof in range(dim)]
             locDirDofs = list()
@@ -88,20 +86,21 @@ class MatFSNS(MatFS):
                 for dof in range(dim):
                     locDirDofs.append(localBoundaryNode*dim + dof)
             
-            gldofFree = list(indicesVelSet - normalDofs - tangentialDofs - set(glDirDofs))
+            gldofSetFSNS = list(normalDofs | set(glDirDofs) )
+            gldofFreeFSSetNS = list(tangentialDofs )
+            gldof2beSet = list(normalDofs | tangentialDofs | set(glDirDofs)) #[indicesVel[ii] for ii in dof2beSet]
+            gldofFree = list(indicesVelSet - set(gldof2beSet))
             
             dofFree = [ indicesVel.index(i) for i in gldofFree ]
             locNormalDof = [ indicesVel.index(i) for i in normalDofs ]
             locTangDof = [ indicesVel.index(i) for i in tangentialDofs ]
 
             dofFreeFSSetNS = locTangDof
-            dofSetFSNS = locNormalDof
-
-            dof2beSet = list(set(dofFreeFSSetNS) | set(dofSetFSNS) | set(locDirDofs))
-            gldof2beSet = [indicesVel[ii] for ii in dof2beSet]
+            dofSetFSNS = list(set(locNormalDof) | set(locDirDofs) ) 
+            dof2beSet = list(set(dofFreeFSSetNS) | set(dofSetFSNS) )
 
 
-            if normalDofs | tangentialDofs:
+            if normalDofs | tangentialDofs | set(glDirDofs) :
                 self.Krhs.setValues(
                 gldofFree, gldof2beSet,
                 -locK[np.ix_(dofFree, dof2beSet)], addv=True)
@@ -165,7 +164,7 @@ class MatFSNS(MatFS):
         self.Rwfs.assemble()
         self.Rdfs.assemble()
         self.Krhsfs.assemble()
-
+        
         for indd in (indices2one - indices2onefs):
             self.Krhsfs.setValues(indd, indd, 1, addv=False)
         self.Krhsfs.assemble()
