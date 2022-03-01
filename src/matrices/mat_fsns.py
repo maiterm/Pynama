@@ -17,6 +17,7 @@ class MatFSNS(MatFS):
         orhsns_nnz = np.zeros(locElRow)
 
 
+
         for node, connect in enumerate(ind_d):
             if (node + nodeStart) not in (globalNodesNS| globalNodesDIR ):
                 dns_nnz[node] = len(connect & globalNodesNS)
@@ -75,10 +76,15 @@ class MatFSNS(MatFS):
             indicesVelSet = set(indicesVel)
             normalDofs = globalNormalIndicesNS & indicesVelSet
             tangentialDofs = globalTangIndicesNS & indicesVelSet
-            normalDofs -= tangentialDofs 
+            tangentialDofs -= normalDofs 
+
 
             nodeBCintersect = set(globNodesDirichlet) & set(nodes)
-            glDirDofs =  [n*dim + dof for n in nodeBCintersect for dof in range(dim)]
+            
+            glDirDofs =  set([n*dim + dof for n in nodeBCintersect for dof in range(dim)])
+            #glDirDofs -= (normalDofs | tangentialDofs)
+  
+
             locDirDofs = list()
             for node in nodeBCintersect:
                 localBoundaryNode = nodes.index(node)
@@ -86,21 +92,24 @@ class MatFSNS(MatFS):
                 for dof in range(dim):
                     locDirDofs.append(localBoundaryNode*dim + dof)
             
-            gldofSetFSNS = list(normalDofs | set(glDirDofs) )
+            gldofSetFSNS = list(normalDofs | glDirDofs )
             gldofFreeFSSetNS = list(tangentialDofs )
-            gldof2beSet = list(normalDofs | tangentialDofs | set(glDirDofs)) #[indicesVel[ii] for ii in dof2beSet]
+            gldof2beSet = list(normalDofs | tangentialDofs | glDirDofs) #[indicesVel[ii] for ii in dof2beSet]
             gldofFree = list(indicesVelSet - set(gldof2beSet))
             
-            dofFree = [ indicesVel.index(i) for i in gldofFree ]
+            dofFree = [ indicesVel.index(i) for i in gldofFree ] 
+            #por que no hacer lo mismo que arriba ? por que volver a calcular? 
             locNormalDof = [ indicesVel.index(i) for i in normalDofs ]
             locTangDof = [ indicesVel.index(i) for i in tangentialDofs ]
+
+            locDirDofs = list (set(locDirDofs) -  (set(locNormalDof) |  set(locTangDof)))
 
             dofFreeFSSetNS = locTangDof
             dofSetFSNS = list(set(locNormalDof) | set(locDirDofs) ) 
             dof2beSet = list(set(dofFreeFSSetNS) | set(dofSetFSNS) )
 
 
-            if normalDofs | tangentialDofs | set(glDirDofs) :
+            if normalDofs | tangentialDofs | glDirDofs :
                 self.Krhs.setValues(
                 gldofFree, gldof2beSet,
                 -locK[np.ix_(dofFree, dof2beSet)], addv=True)
@@ -268,7 +277,8 @@ class MatFSNS(MatFS):
 
         locIndDirichlet = [ node*dim+dof for node in locNodesDirichlet for dof in range(dim) ]
         
-
+        locIndDirichlet = list(set(locIndDirichlet)-set(locIndNS))
+        globNodesDirichlet -= globNodesNS
 
         if buildOperators:
             self.preAlloc_operators(nnz_diag, nnz_off)
