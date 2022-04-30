@@ -9,7 +9,7 @@ import yaml
 OptDB = petsc4py.PETSc.Options()
 case = OptDB.getString('case', False)
 
-fsCases = ['cavity','cavity-2d', 'diagonal-cavity', 'flat-plate-FSNS','uniform', 'taylor-green','taylor-green2d-3d', 'senoidal', 'flat-plate']
+fsCases = ['cavity','cavity-2d', 'diagonal-cavity', 'flat-plate-FSNS','uniform', 'taylor-green','taylor-green2d-3d','taylor-green3d', 'senoidal', 'flat-plate']
 runTests = OptDB.getString('test', False)
 
 if runTests:
