@@ -19,7 +19,7 @@ class KleSolver:
         self.__vel.setName("velocity")
         self.__isNS = False
 
-        if solveType == "NS":
+        if solveType != "FS" :
             Kfs = self.mat.Kfs
             self.solverFS = KspSolver()
             self.solverFS.createSolver(K + Kfs)
