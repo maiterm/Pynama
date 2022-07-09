@@ -7,13 +7,28 @@ material-properties:
   mu: 0.01
 
 domain:
-  dim: 5 # no es necesario dim = 2, es implicito con nelem + lower + upper
-  nelem: [9,9,9]
   ngl: 3
-  lower: [0,0,0]
-  upper: [1,1,1]
+  box-mesh:
+    nelem: [5,5,5]
+    lower: [0,0,0]
+    upper: [1,1,1]
 
 time-solver:
   max-steps: 201
   start-time: 0
-  end-time: 300
+  end-time: 10
+
+boundary-conditions:
+  custom-func:
+    name: taylor_green2d-3d
+    attributes: ['velocity', 'vorticity', 'alpha']
+
+initial-conditions:
+  custom-func:
+    name: taylor_green2d-3d
+    attributes: ['velocity', 'vorticity', 'alpha']
+
+tests:
+  custom-func:
+    name: taylor_green2d-3d
+    attributes: ['velocity', 'vorticity', 'alpha']

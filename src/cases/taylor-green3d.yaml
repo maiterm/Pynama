@@ -1,6 +1,6 @@
 ---
-name: FaltPlate
-save-dir:  Flate-Plate-FSNS-SolverFSNS-debug
+name: Taylor Green 3d
+save-dir: tg-3d
 
 material-properties:
   rho: 0.5
@@ -9,28 +9,26 @@ material-properties:
 domain:
   ngl: 3
   box-mesh:
-    nelem: [1,1,1]
+    nelem: [5,5,5]
     lower: [0,0,0]
     upper: [1,1,1]
-  
+
 time-solver:
-  max-steps: 30
-  start-time: 0.000001
+  max-steps: 201
+  start-time: 0
   end-time: 10
 
 boundary-conditions:
-  no-slip:
-    #up: [2 ,0 ]
-    down: [0, 0, 0]
-    #left: [0, 0]
-    #right: [0, 0]
   custom-func:
-    name: flat_plate
+    name: taylor_green3d
     attributes: ['velocity', 'vorticity', 'alpha']
-    borders-name: [ "left", "right", "up", "back", "front" ]
-
 
 initial-conditions:
   custom-func:
-    name: flat_plate
+    name: taylor_green3d
+    attributes: ['velocity', 'vorticity', 'alpha']
+
+tests:
+  custom-func:
+    name: taylor_green3d
     attributes: ['velocity', 'vorticity', 'alpha']
