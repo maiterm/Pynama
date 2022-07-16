@@ -14,7 +14,7 @@ def velocity(coord, alpha):
     x_ = 2 * pi * coord[:,0] / Lx
     y_ = 2 * pi * coord[:,1] / Ly
     vel[:,0] = np.cos(x_) * np.sin(y_) *Lx* alpha 
-    vel[:,1] = np.sin(x_) * np.cos(y_) *Ly *alpha 
+    vel[:,1] = -np.sin(x_) * np.cos(y_) *Ly *alpha 
     vel[:,2] = 0
     return vel.flatten()
 
@@ -25,5 +25,5 @@ def vorticity(coord, alpha):
     y_ = 2 * pi * coord[:,1] / Ly
     vort[:,0] = 0
     vort[:,1] = 0 
-    vort[:,2] =  -2 * pi * (Ly / Lx - Lx / Ly) * np.cos(x_) * np.cos(y_) * alpha 
+    vort[:,2] =  -2 * pi * (Ly / Lx + Lx / Ly) * np.cos(x_) * np.cos(y_) * alpha 
     return vort.flatten()
