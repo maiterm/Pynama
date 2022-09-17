@@ -1,20 +1,20 @@
 ---
 name: Taylor Green 3d
-save-dir: tg-3d
+save-dir: tg-3d-elem15-asItwasbefore-Re5000
 
 material-properties:
   rho: 0.5
-  mu: 0.01
+  mu: 0.0001
 
 domain:
   ngl: 3
   box-mesh:
-    nelem: [5,5,5]
+    nelem: [15,15,15]
     lower: [0,0,0]
     upper: [1,1,1]
 
 time-solver:
-  max-steps: 201
+  max-steps: 20
   start-time: 0
   end-time: 10
 

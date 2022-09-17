@@ -1,6 +1,6 @@
 ---
 name: Taylor Green 2d3d
-save-dir: tg-2d3d
+save-dir: tg-2d3d-10-BCchanged-onlyConverged
 
 material-properties:
   rho: 0.5
@@ -9,7 +9,7 @@ material-properties:
 domain:
   ngl: 3
   box-mesh:
-    nelem: [5,5,5]
+    nelem: [10,10,10]
     lower: [0,0,0]
     upper: [1,1,1]
 

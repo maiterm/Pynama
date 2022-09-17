@@ -248,29 +248,55 @@ class BoundaryConditions:
         return set(inds.getIndices())
 
     def setValuesToVec(self, vec, name, t, nu):
-        for b in self.__boundaries:
+        boundaries = self.__boundaries 
+
+        if name == 'velocity':
+            boundaries = self.__fsBoundaries
+            for b in self.__nsBoundaries:
+                normalDir = b.getNormalDirection()
+                vel = 0
+                numOfNodes = b.getNumOfNodes()
+                indsNormal = b.getNormalDofs()
+                collectIndices = self.comm.tompi4py().allgather(indsNormal)   
+                velNormal = np.repeat(vel, numOfNodes)
+                vec.setValues(list(indsNormal), velNormal , addv=False)
+            
+        for b in boundaries:
             arr = b.getValues(name, t, nu)
             if self.__dim == 2 and name == 'vorticity':
                 inds = b.getNodes()
             else:
                 inds = b.getDofsConstrained()
             vec.setValues(inds, arr, addv=False)
+            vec.assemble()
+
+            # for b in self.__nsBoundaries:
+            #     numOfNodes = b.getNumOfNodes()
+            #     vel = 0
+            #     indsNormal = b.getDofsConstrained()
+            #     velNormal = np.repeat(vel, numOfNodes)
+            #     vec.setValues(list(indsNormal), velNormal , addv=False)
+
         vec.assemble()
 
     def setTangentialValuesToVec(self, vec, name, t, nu):
         """This method is useful to impose the no slip condition"""
-        
+        for b in self.__boundaries:
+            arr = b.getValues(name, t, nu)
+            inds = b.getDofsConstrained()
+            vec.setValues(inds, arr, addv=False)
+            vec.assemble()
         for bc in self.__nsBoundaries:
             tangDirs = bc.getTangDirections()
             vel = bc.getVelocitySetted()
-            numOfNodes = bc.getNumOfNodes()
+            numOfNodes = bc.getNumOfNodes()  
+               
             for tang in tangDirs:
                 indsTang = bc.getTangDofs(tang)
                 collectIndices = self.comm.tompi4py().allgather(indsTang)
-
                 
                 velTang = np.repeat(vel[tang], numOfNodes)
                 vec.setValues(list(indsTang), velTang , addv=False)
 
         vec.assemble()
-        bcIS = bc.getIS()
+        #bcIS = bc.getIS()

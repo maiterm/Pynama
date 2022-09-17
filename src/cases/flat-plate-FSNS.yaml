@@ -1,7 +1,6 @@
 ---
 name: FaltPlate
-save-dir:  Flate-Plate-FSNS-SolverFSNS-debug
-
+save-dir:  Flate-Plate-FSNS-10-ApplyBC-selfvort
 material-properties:
   rho: 0.5
   mu: 0.01
@@ -9,12 +8,12 @@ material-properties:
 domain:
   ngl: 3
   box-mesh:
-    nelem: [1,1,1]
+    nelem: [10,10,10]
     lower: [0,0,0]
     upper: [1,1,1]
   
 time-solver:
-  max-steps: 30
+  max-steps: 100
   start-time: 0.000001
   end-time: 10
 

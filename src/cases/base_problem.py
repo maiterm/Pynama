@@ -93,7 +93,7 @@ class BaseProblem(object):
 
     def convergedStepFunction(self, ts):
         time = ts.time
-        step = ts.step_number
+        step = ts.step_number+1
         incr = ts.getTimeStep()
         vort = ts.getSolution()
         vel = self.solverKLE.getSolution()
@@ -220,13 +220,21 @@ class BaseProblem(object):
                 self.logger.info("Computing Curl to initial velocity to get initial Vorticity")
                 vel.setValues( inds , velArr)
 
+        # else:
+        #     if self.dim == 2:
+        #         for node in nodes:
+        #             vort.setValue(node ,0, addv=False)
+        #     else:
+        #         for ind in inds:
+        #             vort.setValue(ind ,0, addv=False)
+
         vort.assemble()
         vel.assemble()
         self.vort = vort
-        # self.ts.setSolution(vort)
+        #self.ts.setSolution(vort)
 
-        # self.viewer.saveData(0, initTime, vel, vort)
-        # self.viewer.writeXmf(self.caseName)
+        self.viewer.saveData(0, initTime, vel, vort)
+        self.viewer.writeXmf(self.caseName)
 
     def view(self):
         print(f"Case: {self.case}")

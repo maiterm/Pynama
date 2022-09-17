@@ -97,6 +97,9 @@ class Boundary:
     def getTangDirections(self):
         return self.__dirs.getTangentials()
 
+    def getNormalDirection(self):
+        return self.__dirs.getNormal()
+
     def getNodes(self):
         return self.__inds.getBlockIndices()
 

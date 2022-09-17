@@ -1,6 +1,6 @@
 ---
 name: Cavity
-save-dir: cavity-re100-3d-up1Down-recX-sinBord
+save-dir: cavity-re100-verificacion---Down2
 
 material-properties:
   rho: 0.5
@@ -9,15 +9,15 @@ material-properties:
 domain:
   ngl: 3
   box-mesh:
-    nelem: [30,10,10]
+    nelem: [8,8,8]
     lower: [0,0,0]
-    upper: [3,1,1]
+    upper: [1,1,1]
 
   
 time-solver:
-  max-steps: 2000
+  max-steps: 50
   start-time: 0
-  end-time: 20
+  end-time: 15
 
   
 boundary-conditions:
@@ -25,7 +25,7 @@ boundary-conditions:
     left: [0, 0,0]
     right: [0, 0,0]
     down: [2, 0,0]
-    up: [2 ,0,0 ]
+    up: [0,0,0 ]
     back: [0, 0,0]
     front: [0, 0,0]
 
