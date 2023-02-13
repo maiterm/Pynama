@@ -9,11 +9,11 @@ import yaml
 OptDB = petsc4py.PETSc.Options()
 case = OptDB.getString('case', False)
 
-fsCases = ['cavity','cavity-2d', 'diagonal-cavity', 'flat-plate-FSNS','uniform', 'taylor-green','taylor-green3d','taylor-green2d-3d', 'senoidal', 'flat-plate']
+fsCases = ['cavity','cavity-2d', 'diagonal-cavity', 'flat-plate-FSNS','uniform', 'taylor-green','taylor-green3d','taylor-green3dn','taylor-green2d-3d', 'senoidal', 'flat-plate']
 runTests = OptDB.getString('test', False)
 
 if runTests:
-    from cases.base_problem import BaseProblemTest as FemProblem
+     from cases.base_problem import BaseProblemTest as FemProblem
 else:
     from cases.base_problem import BaseProblem as FemProblem
 
@@ -82,12 +82,13 @@ def generateChartOperators(config):
     totalNodes = []
     errors = [[list(), list(), list()],[list(), list(), list()]]
     errors_h = [list(), list(), list()]
-    names = ["convective", "diffusive", "curl"]
-    totalNgl = 11
-    # dim = len(config.get("domain").get("nelem"))
+    names = ["Convectivo", "Difusivo", "Rotor"]
+    #totalNgl = 
+    dim = len(config.get("domain").get("box-mesh").get("nelem"))
     for x, elem in enumerate(range(2,5,2)):
-        for i, ngl in enumerate(range(3,totalNgl,1)):
-            fem = FemProblem(config, ngl=ngl, nelem=[2,2])
+        for i, ngl in enumerate(range(3-x,int(16/elem+2),1)):
+            print(x,elem, ngl )
+            fem = FemProblem(config, ngl=ngl, nelem=[elem]*dim)
             fem.setUp()
             fem.setUpSolver()
             errorConv, errorDiff, errorCurl = fem.OperatorsTests()
@@ -102,7 +103,7 @@ def generateChartOperators(config):
     print(totalNodes)
     for n in totalNodes:
         nelem = int((n - 1)/2)
-        fem = FemProblem(config, ngl=3, nelem=[2,2])
+        fem = FemProblem(config, ngl=3, nelem=[nelem]*dim)
         fem.setUp()
         fem.setUpSolver()
         errorConv, errorDiff, errorCurl = fem.OperatorsTests()
@@ -120,16 +121,82 @@ def generateChartOperators(config):
 
     for i in range(3):
         plt.figure(figsize=(10,10))
-        plt.loglog(Nelem[0], errors[0][i],marker='o', markersize=3 ,basey=10,linewidth =0.75, color="b", label=r"$N_{el} = 2 \times 2$ - refinamiento p")
-        plt.loglog(Nelem[1], errors[1][i],marker='o', markersize=3, basey=10,linewidth =0.75, color="r", label=r"$N_{el} = 4 \times 4$ - refinamiento p")
-        plt.loglog(Nelem_h, errors_h[i],marker='o', markersize=3, basey=10,linewidth =0.75, color="k", label=r"$Q_2$ - refinamiento h")
+        plt.loglog(Nelem[0], errors[0][i],marker='o', markersize=3 ,base=10,linewidth =0.75, color="b", label=r"$n_{elem} = 2$ - refinamiento p")
+        plt.loglog(Nelem[1], errors[1][i],marker='o', markersize=3, base=10,linewidth =0.75, color="r", label=r"$n_{elem} = 4$ - refinamiento p")
+        plt.loglog(Nelem_h, errors_h[i],marker='o', markersize=3, base=10,linewidth =0.75, color="k", label=r"$Q_2$ - refinamiento h")
         plt.xlabel(r'$N*$')
         plt.legend()
         plt.ylabel(r'$||Error||_{2}$')
         plt.grid(True)
-        plt.savefig(f"error-{names[i]}")
+        plt.savefig(f"error-{names[i]}-1t")
         plt.clf()
 
+def generateChartKLEs(config):
+    nelems=[6,8]
+    ngl=5
+    labels=[]
+    dim = 2
+    file="velerror-dim2-ngl5.csv"
+    for i in nelems:
+        nelem=[i]*dim
+        labels.append(r"$n_{elem}$="+str(nelem)+"-$N_{GL}$="+str(ngl))
+        print(labels)
+        savedir = "tg-2d3d-ngl5-"+str(i)
+        fem = FemProblem(config,ngl=ngl, nelem=nelem,saveDir=savedir,chart=True)
+        fem.setUp()
+        fem.setUpSolver()
+        if not fem.comm.rank:
+            fem.logger.info("Solving problem...")
+        fem.timer.tic()
+        fem.ts.solve(fem.vort)
+        if not fem.comm.rank:
+            fem.logger.info(f"Solver Finished in {fem.timer.toc()} seconds")
+            fem.logger.info(f"Total time: {fem.timerTotal.toc()} seconds")
+        fem.getErrorCsv(file)
+    plt.figure(figsize=(20,10))
+    plt.rcParams.update({'font.size': 22})
+    plt.xlabel(r'tiempo')
+    plt.ylabel(r'$||Error_{vel}||_{\infty}$')
+    colors=["b","r","violet","g","grey","b","r","violet","g","black","lightblue","orange","pink"]
+    mark= ["","","","","",'o','>',"|","x",".",""]
+    with open(file,"r") as f:
+        n=0
+        file_csv= csv.reader(f)
+        for i, line in enumerate(file_csv):
+            if i%2==0:
+                time=[float(num) for num in line if num !=""  ]
+                print(i)
+            else:
+                error=[float(num)for num in line if num !="" ]
+                plt.plot(time, error ,marker=mark[n], markersize=3 ,color=colors[n],label=labels[n])
+                n+=1
+    #plt.xlim(-0.001,5)
+    plt.legend()    
+    plt.title(r'Máximo error de la velocidad en el tiempo')
+    plt.savefig(f"Error-Velocidad-mallas-{case}-{nelems[0]}-{nelems[-1]}-{ngl}")
+    plt.figure(figsize=(20,10))
+    plt.rcParams.update({'font.size': 22})
+    plt.xlabel(r'tiempo')
+    plt.ylabel(r'$||Error_{vel}||_{\infty}$')
+    colors=["b","r","violet","g","grey","b","r","violet","g","black","lightblue","orange","pink"]
+    mark= ["","","","","",'o','>',"|","x",".",""]
+    with open(file,"r") as f:
+        n=0
+        file_csv= csv.reader(f)
+        for i, line in enumerate(file_csv):
+            if i%2==0:
+                time=[float(num) for num in line if num !=""  ]
+                print(i)
+            else:
+                error=[float(num)for num in line if num !="" ]
+                plt.plot(time, error ,marker=mark[n], markersize=3 ,color=colors[n],label=labels[n])
+                n+=1
+    plt.xlim(-0.001,4)
+    plt.legend()    
+    plt.title(r'Máximo error de la velocidad en el tiempo')
+    plt.savefig(f"Error-Velocidad-mallas-{case}-{nelems[0]}-{nelems[-1]}-ngl-{ngl}-tiempo4")
+    
+        
 def generateParaviewer(config):
     fem = FemProblem(config)
     fem.setUp()
@@ -182,6 +249,8 @@ def main():
         generateChartOperators(yamlData)
     elif runTests == 'chartkle':
         generateChartKLE(yamlData)
+    elif runTests == 'chartkles':
+        generateChartKLEs(yamlData)
     else:
         from cases.custom_func import BaseProblem as FemProblem
         timeSolving(yamlData)

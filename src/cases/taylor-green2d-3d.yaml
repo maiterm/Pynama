@@ -1,34 +1,34 @@
 ---
 name: Taylor Green 2d3d
-save-dir: tg-2d3d-master
+save-dir: tg-2d3d-ngl5-chartKLES
 
 material-properties:
   rho: 0.5
   mu: 0.01
 
 domain:
-  ngl: 3
+  ngl: 5
   box-mesh:
     nelem: [10,10,10]
     lower: [0,0,0]
     upper: [1,1,1]
 
 time-solver:
-  max-steps: 50
+  max-steps: 5000
   start-time: 0
   end-time: 5
 
 boundary-conditions:
   custom-func:
-    name: taylor_green_3d
+    name: taylor_green_3d_2d
     attributes: ['velocity', 'vorticity', 'alpha']
 
 initial-conditions:
   custom-func:
-    name: taylor_green_3d
+    name: taylor_green_3d_2d
     attributes: ['velocity', 'vorticity', 'alpha']
 
 tests:
   custom-func:
-    name: taylor_green_3d
+    name: taylor_green_3d_2d
     attributes: ['velocity', 'vorticity', 'alpha']

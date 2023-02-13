@@ -2,6 +2,10 @@ import yaml
 from petsc4py import PETSc
 from mpi4py import MPI
 import importlib
+import logging
+import numpy as np
+from math import cos, sin, radians, sqrt
+import csv
 # Local packages
 from domain.domain import Domain
 from viewer.paraviewer import Paraviewer
@@ -10,9 +14,7 @@ from matrices.mat_fs import MatFS, Operators
 from matrices.mat_ns import MatNS
 from solver.kle_solver import KleSolver
 from common.timer import Timer
-import logging
-import numpy as np
-from math import cos, sin, radians, sqrt
+
 
 class BaseProblem(object):
     def __init__(self, config,**kwargs):
@@ -37,6 +39,9 @@ class BaseProblem(object):
             self.setUpTimeSolverTest()
         elif 'time-solver' in self.config:
             self.setUpTimeSolver()
+
+
+
 
     def setUp(self):
         self.setUpDomain()
@@ -102,11 +107,8 @@ class BaseProblem(object):
         if not self.comm.rank:
             self.logger.info(f"Converged: Step {step:4} | Time {time:.4e} | Increment Time: {incr:.2e} ")
 
-    def createVtkFile(self):
-        viewer = PETSc.Viewer()
-        viewer.createVTK('immersed-body.vtk', mode=PETSc.Viewer.Mode.WRITE)
-        viewer.view(self.dom)
-        viewer.destroy()
+
+
 
     def evalRHS(self, ts, t, vort, f):
         """Evaluate the KLE right hand side."""
@@ -230,9 +232,28 @@ class BaseProblem(object):
         print(f"Domain: {self.dom.view()} ")
         print(f"NGL: {self.dom.getNGL() }")
 
+    def getErrorCsv(self,file):
+        with open (file,"a") as f:#save csv Error8 and time
+             file_csv=csv.writer(f)
+             file_csv.writerows([self.saveTime,self.saveError8])   
+
+    def setUpTimeSolverTest(self):
+        options = self.config.get("time-solver")
+        self.ts = TsSolver(self.comm)
+        sTime = options['start-time']
+        eTime = options['end-time']
+        maxSteps = options['max-steps']
+        self.ts.setUpTimes(sTime, eTime, maxSteps)
+        self.saveError2 = []
+        self.saveError8 = []
+        self.saveStep = []
+        self.saveTime = []
+        self.ts.initSolver(self.evalRHS, self.convergedStepFunctionKLET)
+
 class BaseProblemTest(BaseProblem):
 
-    def generateExactVecs(self,vel=None, vort=None ,time=None):
+
+    def generateExactVecs(self,time=None):
         exactVel = self.mat.K.createVecRight()
         exactVort = self.mat.Rw.createVecRight()
         exactVel.setName(f"{self.caseName}-exact-vel")
@@ -240,21 +261,18 @@ class BaseProblemTest(BaseProblem):
         allNodes = self.dom.getAllNodes()
         inds_w = [node*self.dim_w + dof for node in allNodes for dof in range(self.dim_w)]
         inds = [node*self.dim + dof for node in allNodes for dof in range(self.dim)]
-        if vel and vort:
-            arrVel = np.tile(vel, len(allNodes))
-            arrVort =  np.tile(vort, len(allNodes))
-        else:
-            customFunc = self.config['tests']['custom-func']
-            relativePath = f".{customFunc['name']}"
-            functionLib = importlib.import_module(relativePath, package='functions')
 
-            funcVel = functionLib.velocity
-            funcVort = functionLib.vorticity
-            alpha = functionLib.alpha(self.nu, time)
+        customFunc = self.config['tests']['custom-func']
+        relativePath = f".{customFunc['name']}"
+        functionLib = importlib.import_module(relativePath, package='functions')
 
-            coords = self.dom.getFullCoordArray()
-            arrVel = funcVel(coords, alpha)
-            arrVort = funcVort(coords, alpha)
+        funcVel = functionLib.velocity
+        funcVort = functionLib.vorticity
+        alpha = functionLib.alpha(self.nu, time)
+
+        coords = self.dom.getFullCoordArray()
+        arrVel = funcVel(coords, alpha)
+        arrVort = funcVort(coords, alpha)
 
         exactVort.setValues(inds_w, arrVort)
         exactVel.setValues(inds, arrVel)
@@ -262,6 +280,42 @@ class BaseProblemTest(BaseProblem):
         exactVort.assemble()
 
         return exactVel, exactVort
+
+
+    def convergedStepFunctionKLET(self, ts):
+        time = ts.time
+        step = ts.step_number
+        incr = ts.getTimeStep()
+        vort = ts.getSolution()
+        vel = self.solverKLE.getSolution()
+        #self.solveKLE(time, self.vort)
+        # self.viewer.newSaveVec([self.vel, self.vort], step)
+        exactVel, exactVort = self.generateExactVecs(time)
+        errorVel = exactVel - vel
+        errorVort = exactVort - vort
+        if time<=5:
+            self.saveError8.append((errorVel).norm(norm_type=3))
+            self.saveTime.append(time)
+        else:
+            if step%10 == 0: 
+                #self.saveError2.append((errorVel).norm(norm_type=2))
+                self.saveError8.append((errorVel).norm(norm_type=3))
+                self.saveTime.append(time)
+        # self.saveStep.append(step)
+        # errorVort.setName("ErrorVort")
+        # errorVel.setName("ErrorVel")
+        # exactVort.setName("ExactVort")
+        # exactVel.setName("ExactVel")
+        self.viewer.saveData(step, time, vel, vort, exactVel, exactVort,errorVel,errorVort)
+        self.viewer.writeXmf(self.caseName)        
+        if not self.comm.rank:
+            self.logger.info(f"Converged: Step {step:4} | Time {time:.4e} | Increment Time: {incr:.2e} ")
+
+    def createVtkFile(self):
+        viewer = PETSc.Viewer()
+        viewer.createVTK('immersed-body.vtk', mode=PETSc.Viewer.Mode.WRITE)
+        viewer.view(self.dom)
+        viewer.destroy()
 
     def solveKLETests(self, steps=10):
         self.logger.info("Running KLE Tests")
@@ -300,59 +354,61 @@ class BaseProblemTest(BaseProblem):
         alpha = functionLib.alpha(self.nu, time)
         coords = self.dom.getFullCoordArray()
         allNodes = self.dom.getAllNodes()
-
+        inds = [node*dof + dof for node in allNodes for dof in range(self.dim)]
+                
         for i, name in enumerate(vecNames):
             vec = exactVecs[i]
             vec.setName(name)
+            
             func = functionLib.__getattribute__(name)
             values = func(coords, alpha)
-            if name == 'velocity':
-                inds = [node*dof + dof for node in allNodes for dof in range(self.dim)]
-                vec.setValues(inds, values)
-            else:
-                vec.setValues(allNodes, values)
+            vec.setValues(inds, values)
             vec.assemble()
 
         return exactVel, exactVort, exactConv, exactDiff
 
-    def OperatorsTests(self, viscousTime=1):
-        time = (viscousTime**2)/(4*self.nu)
+    def OperatorsTests(self):
+        time = 1
         vel = self.solverKLE.getSolution()
         step = 0
         exactVel, exactVort, exactConv, exactDiff = self.generateExactOperVecs(time)
         self.dom.applyBoundaryConditions(vel, "velocity", time, self.nu)
-        self.solverKLE.solve(exactVort)
+        #self.solverKLE.solve(exactVort)
         convective = self.getConvective(exactVel, exactConv)
         convective.setName("convective")
         diffusive = self.getDiffusive(exactVel, exactDiff)
         diffusive.setName("diffusive")
-        self.operator.Curl.mult(exactVel, self.vort)
+        vort = exactVort.copy()
+        self.operator.Curl.mult(exactVel, vort)
         self.viewer.saveData(step, time, vel, self.vort, exactVel, exactVort,exactConv,exactDiff,convective,diffusive )
         self.viewer.writeXmf(self.caseName)
         self.operator.weigCurl.reciprocal()
-        err = convective - exactConv
+        err  = (convective - exactConv)
+        #errorConv = (convective - exactConv).norm(norm_type=2)
         errorConv = sqrt((err * err ).dot(self.operator.weigCurl))
+        #errorDiff = (diffusive - exactDiff).norm(norm_type=2)
         err = diffusive - exactDiff
         errorDiff = sqrt((err * err ).dot(self.operator.weigCurl))
-        err = self.vort - exactVort
+        #errorCurl = (self.vort - exactVort).norm(norm_type=2)
+        err = vort - exactVort
         errorCurl = sqrt((err * err ).dot(self.operator.weigCurl))
         self.logger.info("Operatores Tests")
         return errorConv, errorDiff, errorCurl
 
     def getConvective(self, exactVel, exactConv):
         convective = exactConv.copy()
-        vel = self.solverKLE.getSolution()
-        self.computeVtensV(vel)
-        aux= vel.copy()
+        #vel = self.solverKLE.getSolution()
+        self.computeVtensV(exactVel)
+        aux= exactVel.copy()
         self.operator.DivSrT.mult(self._VtensV, aux)
         self.operator.Curl.mult(aux,convective)
         return convective
 
     def getDiffusive(self, exactVel, exactDiff):
         diffusive = exactDiff.copy()
-        vel = self.solverKLE.getSolution()
+        #vel = self.solverKLE.getSolution()
         self.operator.SrT.mult(exactVel, self._Aux1)
-        aux = vel.copy()
+        aux = exactVel.copy()
         self._Aux1 *= (2.0 * self.mu)
         self.operator.DivSrT.mult(self._Aux1, aux)
         aux.scale(1/self.rho)

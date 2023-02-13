@@ -1,5 +1,5 @@
 ---
-name: Taylor Green 3d
+name: Taylor Green 3d n
 save-dir: tg-3d-25
 
 material-properties:
@@ -20,15 +20,15 @@ time-solver:
 
 boundary-conditions:
   custom-func:
-    name: taylor_green3d
+    name: taylor_green_3dn
     attributes: ['velocity', 'vorticity', 'alpha']
 
 initial-conditions:
   custom-func:
-    name: taylor_green3d
-    attributes: ['velocity', 'vorticity', 'alpha']
+    name: taylor_green_3dn
+    attributes: ['velocity', 'vorticity', 'alpha']    
 
 tests:
   custom-func:
-    name: taylor_green3d
-    attributes: ['velocity', 'vorticity', 'alpha']
+    name: taylor_green_3dn
+
