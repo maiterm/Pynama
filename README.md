@@ -1,5 +1,5 @@
 # Pynama
-Fem problem solver with PETSc tools
+3D fluid simulator. Procedure for the Navier–Stokes equations in the vorticity–velocity formulation, based on the kinematic Laplacian equation (KLE) method by spectral elements.Fem problem solver in Python with PETSc tools. 
 
 ### Necessary Installation: 
 
